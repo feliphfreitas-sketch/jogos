@@ -38,6 +38,7 @@
           <div class="round-picker format-picker" id="format-picker">
             <button type="button" data-format="single" class="active">1 rodada</button>
             <button type="button" data-format="elimination">Até sobrar 1</button>
+            <button type="button" data-format="doubt">Duvido</button>
           </div>
         </div>
         <button class="button primary" id="start-game" type="button" disabled>Adicione pelo menos 1 jogador</button>
@@ -48,12 +49,13 @@
     <section class="screen hidden" id="play-screen" aria-live="polite">
       <div class="play-meta"><span id="round-label">Rodada 1 de 3</span><span id="turn-label">1/1</span></div>
       <div class="turn-heading"><p class="kicker">É a vez de</p><h2 id="current-player">Jogador</h2></div>
-      <div class="target-display"><span>Meta desta rodada</span><strong id="target-label">00.00s</strong></div>
+      <div class="target-display"><span id="target-caption">Meta desta rodada</span><strong id="target-label">00.00s</strong></div>
       <div class="secret-card">
         <div class="secret-ring" id="secret-ring"></div>
         <div class="secret-copy"><strong id="secret-readout">Pronto?</strong><span id="secret-hint">Aperte começar e pare no alvo.</span></div>
       </div>
       <button class="big-button go" id="timer-button" type="button">Começar</button>
+      <button class="button doubt-button hidden" id="doubt-button" type="button">Duvido</button>
       <p class="pass-note" id="pass-note">Quando começar, não haverá relógio na tela.</p>
     </section>
 
@@ -91,6 +93,7 @@
         <li>O tempo correndo fica escondido. O realizado só aparece no placar.</li>
         <li>Em <strong>1 rodada</strong>, vence quem ficar mais perto da meta.</li>
         <li>Em <strong>Até sobrar 1</strong>, quem ficar mais longe é eliminado a cada rodada. O último vence.</li>
+        <li>Em <strong>Duvido</strong>, o tempo corre escondido e passa de pessoa em pessoa. Quem duvidar testa se o tempo já passou; quem errar é eliminado.</li>
       </ol>
       <div class="points-rule"><strong>Critério</strong><span>Não há pontos. Quanto menor a diferença entre o realizado e a meta, melhor a classificação. No modo Até sobrar 1, o último colocado de cada rodada é eliminado.</span></div>
     </div>

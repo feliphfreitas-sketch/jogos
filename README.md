@@ -5,12 +5,13 @@ Jogo offline de precisão para jogar sozinho ou passar o celular entre amigos. O
 ## Regras
 
 - Cadastre de 1 a 6 jogadores.
-- Escolha entre `1 rodada` ou `Até sobrar 1`.
+- Escolha entre `1 rodada`, `Até sobrar 1` ou `Duvido`.
 - Em cada rodada, o jogo sorteia uma meta com `Math.random()` e mostra o alvo ao jogador.
 - Cada jogador vê a meta, toca em **Começar** e depois em **Parar** quando achar que chegou ao alvo.
 - O resultado mostra o tempo parado e sinaliza `↓ menor` ou `↑ maior` que a meta.
 - No modo de uma rodada, não há pontos: vence quem ficar mais perto da meta.
 - No modo eliminatório, o jogador mais distante da meta sai a cada rodada, até restar o campeão.
+- No modo `Duvido`, o tempo corre escondido e passa de pessoa em pessoa. Quem recebe o celular pode retomar e pausar novamente ou desafiar a pessoa anterior. Se o tempo passou da meta, sai quem pausou; se ainda não passou, sai quem duvidou. Acertar exatamente a meta ainda não conta como passar.
 - Ao final, o jogo revela os alvos, os palpites e o campeão.
 
 ## Como jogar
