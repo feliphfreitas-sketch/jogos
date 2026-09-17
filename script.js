@@ -1,12 +1,16 @@
 const state = {
   players: [],
-  rounds: 3,
+  format: 'single',
+  rounds: 1,
   round: 1,
   turn: 0,
   target: 0,
   startedAt: 0,
   running: false,
-  results: []
+  results: [],
+  roundHistory: [],
+  activePlayers: [],
+  eliminated: []
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -15,8 +19,8 @@ const screens = ['setup', 'play', 'round', 'scoreboard', 'final'];
 function showScreen(name) {
   screens.forEach((screen) => $(`#${screen}-screen`).classList.toggle('hidden', screen !== name));
   $('#restart-button').classList.toggle('hidden', name === 'setup');
-  $('#top-left').textContent = name === 'setup' || name === 'final' ? 'Jogo offline' : `Rodada ${state.round} de ${state.rounds}`;
-  $('#top-right').textContent = name === 'setup' || name === 'final' ? '' : `${state.turn + 1}/${state.players.length}`;
+  $('#top-left').textContent = name === 'setup' || name === 'final' ? 'Jogo offline' : `Rodada ${state.round}`;
+  $('#top-right').textContent = name === 'setup' || name === 'final' ? '' : `${state.turn + 1}/${state.activePlayers.length}`;
 }
 
 function formatSeconds(value) {
@@ -54,6 +58,9 @@ function startGame() {
   state.round = 1;
   state.turn = 0;
   state.results = [];
+  state.roundHistory = [];
+  state.activePlayers = [...state.players];
+  state.eliminated = [];
   state.players.forEach((player) => { player.score = 0; player.results = []; });
   startRound();
 }
@@ -67,10 +74,10 @@ function startRound() {
 
 function startTurn() {
   state.running = false;
-  const player = state.players[state.turn];
+  const player = state.activePlayers[state.turn];
   $('#current-player').textContent = player.name;
-  $('#round-label').textContent = `Rodada ${state.round} de ${state.rounds}`;
-  $('#turn-label').textContent = `${state.turn + 1}/${state.players.length}`;
+  $('#round-label').textContent = state.format === 'elimination' ? `Rodada ${state.round} · ${state.activePlayers.length} na disputa` : 'Rodada única';
+  $('#turn-label').textContent = `${state.turn + 1}/${state.activePlayers.length}`;
   $('#target-label').textContent = `${formatSeconds(state.target)}s`;
   $('#secret-readout').textContent = 'Pronto?';
   $('#secret-hint').textContent = 'Aperte começar e pare no alvo.';
@@ -86,35 +93,38 @@ function stopTimer() {
   window.clearInterval(state.ticker);
   const elapsed = (performance.now() - state.startedAt) / 1000;
   const diff = Math.abs(elapsed - state.target);
-  const result = { player: state.players[state.turn].name, elapsed, diff, target: state.target };
+  const result = { player: state.activePlayers[state.turn].name, elapsed, diff, target: state.target };
   state.results.push(result);
-  state.players[state.turn].results.push(result);
-  state.players[state.turn].score += Math.max(0, Math.round(100 - diff * 8.333));
+  state.activePlayers[state.turn].results.push(result);
   $('#round-summary-text').textContent = 'Palpite registrado.';
   $('#round-summary-detail').textContent = `${formatSeconds(elapsed)}s · resultado no placar`;
   showScreen('round');
 }
 
 function showRoundScoreboard() {
-  $('#round-target').textContent = formatSeconds(state.target);
+  state.roundHistory.push({ target: state.target, results: [...state.results] });
   $('#round-scoreboard').innerHTML = [...state.results].sort((a, b) => a.diff - b.diff).map((result, index) => `
-    <div class="score-row ${index === 0 ? 'leader' : ''}"><span>${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(result.player)}</strong><small>parou em ${formatSeconds(result.elapsed)}s <b class="direction ${result.elapsed < result.target ? 'lower' : result.elapsed > result.target ? 'higher' : 'exact'}">${result.elapsed < result.target ? '↓' : result.elapsed > result.target ? '↑' : '='} ${formatSeconds(result.diff)}s ${result.elapsed < result.target ? 'menor' : result.elapsed > result.target ? 'maior' : 'exato'}</b></small></div>
+    <div class="score-row ${index === 0 ? 'leader' : ''} ${state.format === 'elimination' && index === state.results.length - 1 ? 'disqualified-row' : ''}"><span>${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(result.player)}${index === 0 ? '<b class="round-winner">melhor da rodada</b>' : ''}${state.format === 'elimination' ? index === state.results.length - 1 ? '<b class="disqualified">desclassificado</b>' : '<b class="classified">classificado</b>' : ''}</strong><small>meta ${formatSeconds(result.target)}s · realizado ${formatSeconds(result.elapsed)}s · <b class="direction ${result.elapsed < result.target ? 'lower' : result.elapsed > result.target ? 'higher' : 'exact'}">${result.elapsed < result.target ? '↓' : result.elapsed > result.target ? '↑' : '='} ${formatSeconds(result.diff)}s ${result.elapsed < result.target ? 'menor' : result.elapsed > result.target ? 'maior' : 'exato'}</b></small></div>
   `).join('');
-  $('#continue-round').textContent = state.round === state.rounds ? 'Ver resultado final →' : 'Próxima rodada →';
+  $('#continue-round').textContent = state.format === 'single' ? 'Ver resultado final →' : 'Próxima rodada →';
   showScreen('scoreboard');
 }
 
-function scoreRows() {
-  return [...state.players].sort((a, b) => b.score - a.score).map((player, index) => `
-    <div class="score-row ${index === 0 ? 'leader' : ''}"><span>${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(player.name)}</strong><small>${player.score} pontos</small></div>
+function scoreRows(players = state.players) {
+  const ranked = state.format === 'elimination' ? players : [...players].sort((a, b) => b.score - a.score);
+  return ranked.map((player, index) => `
+    <div class="score-row ${index === 0 ? 'leader' : ''}"><span>${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(player.name)}</strong><small>${state.format === 'single' ? (index === 0 ? 'melhor da rodada' : '') : index === 0 ? 'campeão' : `desclassificado na rodada ${player.results.length}`}</small></div>
   `).join('');
 }
 
 function showFinal() {
-  const ranked = [...state.players].sort((a, b) => b.score - a.score);
+  const ranked = state.format === 'elimination' ? [state.activePlayers[0], ...state.eliminated].filter(Boolean) : [...state.players].sort((a, b) => b.score - a.score);
   $('#winner-name').textContent = ranked[0]?.name || '-';
-  $('#final-scoreboard').innerHTML = scoreRows();
-  $('#revealed-rounds').innerHTML = `<p class="kicker">Metas reveladas</p>${state.players[0].results.map((result, index) => `<div><span>Rodada ${index + 1}</span><strong>${formatSeconds(result.target)}s</strong></div>`).join('')}`;
+  $('#final-scoreboard').innerHTML = scoreRows(ranked);
+  $('#revealed-rounds').innerHTML = `<p class="kicker">Resultado de cada rodada</p>${state.roundHistory.map((round, roundIndex) => `
+    <article class="revealed-round"><div class="revealed-round-heading"><strong>Rodada ${roundIndex + 1}</strong></div>
+    ${[...round.results].sort((a, b) => a.diff - b.diff).map((result, resultIndex, rankedResults) => `<div class="revealed-result ${resultIndex === 0 ? 'round-result-winner' : ''} ${state.format === 'elimination' && resultIndex === rankedResults.length - 1 ? 'disqualified-row' : ''}"><strong>${escapeHtml(result.player)}${resultIndex === 0 ? '<b class="round-winner">melhor da rodada</b>' : ''}${state.format === 'elimination' ? resultIndex === rankedResults.length - 1 ? '<b class="disqualified">desclassificado</b>' : '<b class="classified">classificado</b>' : ''}</strong><span>meta ${formatSeconds(result.target)}s · realizado ${formatSeconds(result.elapsed)}s</span><b class="direction ${result.elapsed < result.target ? 'lower' : result.elapsed > result.target ? 'higher' : 'exact'}">${result.elapsed < result.target ? '↓' : result.elapsed > result.target ? '↑' : '='} ${formatSeconds(result.diff)}s ${result.elapsed < result.target ? 'menor' : result.elapsed > result.target ? 'maior' : 'exato'}</b></div>`).join('')}</article>
+  `).join('')}`;
   showScreen('final');
 }
 
@@ -122,6 +132,9 @@ function resetGame() {
   state.round = 1;
   state.turn = 0;
   state.results = [];
+  state.roundHistory = [];
+  state.activePlayers = [];
+  state.eliminated = [];
   renderPlayers();
   showScreen('setup');
 }
@@ -134,10 +147,10 @@ function escapeHtml(value) {
 
 $('#add-player').addEventListener('click', addPlayer);
 $('#player-name').addEventListener('keydown', (event) => { if (event.key === 'Enter') addPlayer(); });
-document.querySelectorAll('[data-rounds]').forEach((button) => button.addEventListener('click', () => {
-  document.querySelectorAll('[data-rounds]').forEach((item) => item.classList.remove('active'));
+document.querySelectorAll('[data-format]').forEach((button) => button.addEventListener('click', () => {
+  document.querySelectorAll('[data-format]').forEach((item) => item.classList.remove('active'));
   button.classList.add('active');
-  state.rounds = Number(button.dataset.rounds);
+  state.format = button.dataset.format;
 }));
 $('#start-game').addEventListener('click', startGame);
 $('#timer-button').addEventListener('click', () => {
@@ -152,20 +165,30 @@ $('#timer-button').addEventListener('click', () => {
   } else stopTimer();
 });
 $('#next-turn').addEventListener('click', () => {
-  if (state.turn + 1 < state.players.length) {
+  if (state.turn + 1 < state.activePlayers.length) {
     state.turn += 1;
     startTurn();
   } else showRoundScoreboard();
 });
 $('#continue-round').addEventListener('click', () => {
-  if (state.round === state.rounds) showFinal();
-  else { state.round += 1; startRound(); }
+  if (state.format === 'single') showFinal();
+  else {
+    const worst = [...state.results].sort((a, b) => b.diff - a.diff)[0];
+    const eliminatedPlayer = state.activePlayers.find((player) => player.name === worst.player);
+    state.eliminated.unshift(eliminatedPlayer);
+    state.activePlayers = state.activePlayers.filter((player) => player !== eliminatedPlayer);
+    if (state.activePlayers.length === 1) showFinal();
+    else { state.round += 1; startRound(); }
+  }
 });
 $('#play-again').addEventListener('click', resetGame);
 $('#restart-button').addEventListener('click', resetGame);
 $('#theme-button').addEventListener('click', () => {
   document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
 });
+$('#rules-button').addEventListener('click', () => $('#rules-panel').classList.remove('hidden'));
+$('#close-rules').addEventListener('click', () => $('#rules-panel').classList.add('hidden'));
+$('#rules-backdrop').addEventListener('click', () => $('#rules-panel').classList.add('hidden'));
 
 renderPlayers();
 showScreen('setup');

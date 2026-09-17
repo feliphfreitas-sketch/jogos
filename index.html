@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
   <meta name="theme-color" content="#12161f">
   <meta name="description" content="Pare o Tempo: um jogo de precisão para jogar com amigos.">
-  <title>Pare o Tempo</title>
+  <title>Acerte o Tempo</title>
   <link rel="stylesheet" href="style.css">
   <script src="script.js" defer></script>
 </head>
@@ -21,8 +21,8 @@
     <section class="screen" id="setup-screen">
       <div class="title-block">
         <p class="kicker">Sem olhar. Só sentir.</p>
-        <h1>Pare o Tempo</h1>
-        <p>Um tempo secreto entre 00.00 e 12.00 foi sorteado. Pare quando achar que chegou nele. Só no final descobrimos quem chegou mais perto.</p>
+        <h1>Acerte o Tempo</h1>
+        <p>Uma meta entre 00.00 e 12.00 foi sorteada. Veja o alvo, pare quando achar que chegou nele e descubra quem foi mais preciso.</p>
       </div>
       <div class="card stack">
         <div>
@@ -34,11 +34,10 @@
           <button class="button ghost" id="add-player" type="button">Adicionar</button>
         </div>
         <div>
-          <span class="field-label">Rodadas por jogador</span>
-          <div class="round-picker" id="round-picker">
-            <button type="button" data-rounds="1">1</button>
-            <button type="button" data-rounds="3" class="active">3</button>
-            <button type="button" data-rounds="5">5</button>
+          <span class="field-label">Formato da partida</span>
+          <div class="round-picker format-picker" id="format-picker">
+            <button type="button" data-format="single" class="active">1 rodada</button>
+            <button type="button" data-format="elimination">Até sobrar 1</button>
           </div>
         </div>
         <button class="button primary" id="start-game" type="button" disabled>Adicione pelo menos 1 jogador</button>
@@ -66,7 +65,6 @@
 
     <section class="screen hidden" id="scoreboard-screen" aria-live="polite">
       <div class="title-block compact"><p class="kicker">Fim da rodada</p><h1>Placar parcial</h1><p>O tempo-alvo desta rodada agora pode ser revelado.</p></div>
-      <div class="reveal-target"><span>meta secreta</span><strong id="round-target">00.00</strong><small>segundos</small></div>
       <div class="card"><div class="scoreboard" id="round-scoreboard"></div></div>
       <button class="button primary" id="continue-round" type="button">Próxima rodada <span>→</span></button>
     </section>
@@ -79,6 +77,23 @@
       <button class="button primary" id="play-again" type="button">Jogar de novo <span>↻</span></button>
     </section>
   </main>
-  <footer><span>PARE O TEMPO</span><span>00.00 — 12.00 · offline</span></footer>
+  <footer><span>ACERTE O TEMPO</span><button class="rules-button" id="rules-button" type="button">Como funciona?</button><span>00.00 — 12.00 · offline</span></footer>
+
+  <section class="rules-panel hidden" id="rules-panel" aria-labelledby="rules-title">
+    <div class="rules-backdrop" id="rules-backdrop"></div>
+    <div class="rules-card" role="dialog" aria-modal="true">
+      <button class="close-rules" id="close-rules" type="button" aria-label="Fechar regras">×</button>
+      <p class="kicker">Regras do jogo</p>
+      <h2 id="rules-title">Acerte o tempo sem ver o relógio.</h2>
+      <ol>
+        <li>O jogo sorteia uma meta entre <strong>00.00 e 12.00 segundos</strong>.</li>
+        <li>Veja a meta, toque em <strong>Começar</strong> e pare quando achar que chegou.</li>
+        <li>O tempo correndo fica escondido. O realizado só aparece no placar.</li>
+        <li>Em <strong>1 rodada</strong>, vence quem ficar mais perto da meta.</li>
+        <li>Em <strong>Até sobrar 1</strong>, quem ficar mais longe é eliminado a cada rodada. O último vence.</li>
+      </ol>
+      <div class="points-rule"><strong>Critério</strong><span>Não há pontos. Quanto menor a diferença entre o realizado e a meta, melhor a classificação. No modo Até sobrar 1, o último colocado de cada rodada é eliminado.</span></div>
+    </div>
+  </section>
 </body>
 </html>
