@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#12161f">
+  <meta name="description" content="Pare o Tempo: um jogo de precisão para jogar com amigos.">
+  <title>Pare o Tempo</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <main id="app">
+    <header class="top-row">
+      <span id="top-left">Jogo offline</span>
+      <button class="restart-button hidden" id="restart-button" type="button">↻ Reiniciar</button>
+      <button class="theme-button" id="theme-button" type="button" aria-label="Alternar tema">◐</button>
+      <span id="top-right"></span>
+    </header>
+
+    <section class="screen" id="setup-screen">
+      <div class="title-block">
+        <p class="kicker">Sem olhar. Só sentir.</p>
+        <h1>Pare o Tempo</h1>
+        <p>Um tempo secreto entre 00.00 e 12.00 foi sorteado. Pare quando achar que chegou nele. Só no final descobrimos quem chegou mais perto.</p>
+      </div>
+      <div class="card stack">
+        <div>
+          <label class="field-label" for="player-name">Jogadores <span id="player-total">0/6</span></label>
+          <div class="player-list" id="player-list"></div>
+        </div>
+        <div class="add-player-row">
+          <input id="player-name" type="text" maxlength="16" placeholder="Nome do jogador" autocomplete="off">
+          <button class="button ghost" id="add-player" type="button">Adicionar</button>
+        </div>
+        <div>
+          <span class="field-label">Rodadas por jogador</span>
+          <div class="round-picker" id="round-picker">
+            <button type="button" data-rounds="1">1</button>
+            <button type="button" data-rounds="3" class="active">3</button>
+            <button type="button" data-rounds="5">5</button>
+          </div>
+        </div>
+        <button class="button primary" id="start-game" type="button" disabled>Adicione pelo menos 1 jogador</button>
+      </div>
+      <p class="offline-note"><span></span> tudo fica neste aparelho · sem internet</p>
+    </section>
+
+    <section class="screen hidden" id="play-screen" aria-live="polite">
+      <div class="play-meta"><span id="round-label">Rodada 1 de 3</span><span id="turn-label">1/1</span></div>
+      <div class="turn-heading"><p class="kicker">É a vez de</p><h2 id="current-player">Jogador</h2></div>
+      <div class="target-display"><span>Meta desta rodada</span><strong id="target-label">00.00s</strong></div>
+      <div class="secret-card">
+        <div class="secret-ring" id="secret-ring"></div>
+        <div class="secret-copy"><strong id="secret-readout">Pronto?</strong><span id="secret-hint">Aperte começar e pare no alvo.</span></div>
+      </div>
+      <button class="big-button go" id="timer-button" type="button">Começar</button>
+      <p class="pass-note" id="pass-note">Quando começar, não haverá relógio na tela.</p>
+    </section>
+
+    <section class="screen hidden" id="round-screen" aria-live="polite">
+      <div class="title-block compact"><p class="kicker">Rodada concluída</p><h1>Ninguém viu o tempo.</h1><p>O próximo jogador pode pegar o celular. O resultado continua secreto.</p></div>
+      <div class="card round-summary"><span class="status-dot"></span><strong id="round-summary-text">Palpite registrado.</strong><small id="round-summary-detail">Jogador 1 de 3</small></div>
+      <button class="button primary" id="next-turn" type="button">Continuar <span>→</span></button>
+    </section>
+
+    <section class="screen hidden" id="scoreboard-screen" aria-live="polite">
+      <div class="title-block compact"><p class="kicker">Fim da rodada</p><h1>Placar parcial</h1><p>O tempo-alvo desta rodada agora pode ser revelado.</p></div>
+      <div class="reveal-target"><span>meta secreta</span><strong id="round-target">00.00</strong><small>segundos</small></div>
+      <div class="card"><div class="scoreboard" id="round-scoreboard"></div></div>
+      <button class="button primary" id="continue-round" type="button">Próxima rodada <span>→</span></button>
+    </section>
+
+    <section class="screen hidden" id="final-screen" aria-live="polite">
+      <div class="title-block compact"><p class="kicker">Partida encerrada</p><h1>Quem sentiu melhor?</h1><p>As metas secretas foram reveladas. Este é o resultado final.</p></div>
+      <div class="winner-block"><span class="trophy">★</span><p class="kicker">Campeão</p><h2 id="winner-name">-</h2></div>
+      <div class="card"><div class="scoreboard" id="final-scoreboard"></div></div>
+      <div class="revealed-rounds" id="revealed-rounds"></div>
+      <button class="button primary" id="play-again" type="button">Jogar de novo <span>↻</span></button>
+    </section>
+  </main>
+  <footer><span>PARE O TEMPO</span><span>00.00 — 12.00 · offline</span></footer>
+</body>
+</html>
