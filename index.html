@@ -54,7 +54,7 @@
         <div class="secret-ring" id="secret-ring"></div>
         <div class="secret-copy"><strong id="secret-readout">Pronto?</strong><span id="secret-hint">Aperte começar e pare no alvo.</span></div>
       </div>
-      <button class="big-button go" id="timer-button" type="button">Começar</button>
+      <button class="big-button start" id="timer-button" type="button">Começar</button>
       <button class="button doubt-button hidden" id="doubt-button" type="button">Duvido</button>
       <p class="pass-note" id="pass-note">Quando começar, não haverá relógio na tela.</p>
     </section>
@@ -79,6 +79,7 @@
       <button class="button primary" id="play-again" type="button">Jogar de novo <span>↻</span></button>
     </section>
   </main>
+  <canvas class="confetti-canvas hidden" id="confetti-canvas" aria-hidden="true"></canvas>
   <footer><span>ACERTE O TEMPO</span><button class="rules-button" id="rules-button" type="button">Como funciona?</button><span>00.00 — 12.00 · offline</span></footer>
 
   <section class="rules-panel hidden" id="rules-panel" aria-labelledby="rules-title">

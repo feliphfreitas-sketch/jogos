@@ -7,6 +7,7 @@ Jogo offline de precisão para jogar sozinho ou passar o celular entre amigos. O
 - Cadastre de 1 a 6 jogadores.
 - Escolha entre `1 rodada`, `Até sobrar 1` ou `Duvido`.
 - Em cada rodada, o jogo sorteia uma meta com `Math.random()` e mostra o alvo ao jogador.
+- A ordem dos jogadores é sorteada aleatoriamente no início de cada rodada (ou disputa).
 - Cada jogador vê a meta, toca em **Começar** e depois em **Parar** quando achar que chegou ao alvo.
 - O resultado mostra o tempo parado e sinaliza `↓ menor` ou `↑ maior` que a meta.
 - No modo de uma rodada, não há pontos: vence quem ficar mais perto da meta.

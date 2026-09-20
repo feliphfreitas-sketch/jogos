@@ -34,6 +34,85 @@ function randomTarget() {
   return Math.random() * 12;
 }
 
+function shuffle(list) {
+  const items = [...list];
+  for (let i = items.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+}
+
+let confettiFrame = 0;
+
+function stopConfetti() {
+  window.cancelAnimationFrame(confettiFrame);
+  const canvas = $('#confetti-canvas');
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  canvas.classList.add('hidden');
+}
+
+function launchConfetti() {
+  stopConfetti();
+  const block = $('.winner-block');
+  block.classList.remove('celebrate');
+  void block.offsetWidth;
+  block.classList.add('celebrate');
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const canvas = $('#confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  const scale = window.devicePixelRatio || 1;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  canvas.classList.remove('hidden');
+
+  const colors = ['#f2c94c', '#ff5a4e', '#3ddc84', '#4da3ff', '#c77dff', '#ffb020', '#ffffff'];
+  const pieces = Array.from({ length: 160 }, (_, index) => ({
+    x: Math.random() * width,
+    y: -20 - Math.random() * height * 0.7,
+    size: 6 + Math.random() * 7,
+    speed: 2.2 + Math.random() * 3.2,
+    drift: Math.random() * Math.PI * 2,
+    sway: 0.6 + Math.random() * 1.4,
+    angle: Math.random() * Math.PI * 2,
+    spin: (Math.random() - 0.5) * 0.3,
+    round: index % 5 === 0,
+    color: colors[index % colors.length]
+  }));
+  const startedAt = performance.now();
+
+  function frame(now) {
+    ctx.clearRect(0, 0, width, height);
+    let visible = 0;
+    pieces.forEach((piece) => {
+      piece.y += piece.speed;
+      piece.drift += 0.05;
+      piece.x += Math.sin(piece.drift) * piece.sway;
+      piece.angle += piece.spin;
+      if (piece.y > height + 20) return;
+      visible += 1;
+      ctx.save();
+      ctx.translate(piece.x, piece.y);
+      ctx.rotate(piece.angle);
+      ctx.scale(1, Math.cos(piece.drift * 1.7));
+      ctx.fillStyle = piece.color;
+      if (piece.round) {
+        ctx.beginPath();
+        ctx.arc(0, 0, piece.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else ctx.fillRect(-piece.size / 2, -piece.size / 4, piece.size, piece.size / 2);
+      ctx.restore();
+    });
+    if (visible && now - startedAt < 9000) confettiFrame = window.requestAnimationFrame(frame);
+    else stopConfetti();
+  }
+  confettiFrame = window.requestAnimationFrame(frame);
+}
+
 function renderPlayers() {
   $('#player-list').innerHTML = state.players.map((player, index) => `
     <div class="player-row"><span>${escapeHtml(player.name)}</span><button type="button" data-remove="${index}" aria-label="Remover ${escapeHtml(player.name)}">×</button></div>
@@ -75,6 +154,7 @@ function startGame() {
 }
 
 function startRound() {
+  state.activePlayers = shuffle(state.activePlayers);
   state.target = randomTarget();
   state.turn = 0;
   state.results = [];
@@ -93,12 +173,13 @@ function startTurn() {
   $('#secret-hint').textContent = 'Aperte começar e pare no alvo.';
   $('#secret-ring').classList.remove('running');
   $('#timer-button').textContent = 'Começar';
-  $('#timer-button').className = 'big-button go';
+  $('#timer-button').className = 'big-button start';
   $('#pass-note').textContent = 'Quando começar, não haverá relógio na tela.';
   showScreen('play');
 }
 
 function startDoubtRound() {
+  state.activePlayers = shuffle(state.activePlayers);
   state.target = randomTarget();
   state.startedAt = 0;
   state.running = false;
@@ -120,7 +201,7 @@ function startDoubtTurn() {
   $('#secret-hint').textContent = firstStart ? 'Toque para iniciar o tempo.' : state.lastPasser ? 'Aceite ou duvide do passe anterior.' : 'Bata para pausar e passe o celular.';
   $('#secret-ring').classList.toggle('running', state.running);
   $('#timer-button').textContent = firstStart ? 'Começar' : state.lastPasser ? 'Aceitar e continuar' : 'Bati · pausar';
-  $('#timer-button').className = 'big-button go';
+  $('#timer-button').className = `big-button ${firstStart || state.lastPasser ? 'start' : 'pause'}`;
   $('#doubt-button').classList.toggle('hidden', !state.lastPasser);
   $('#pass-note').textContent = firstStart ? 'A primeira pessoa dá a largada.' : state.lastPasser ? `Pausado por ${state.lastPasser.name}` : 'O tempo corre e ninguém vê o relógio.';
   showScreen('play');
@@ -211,9 +292,11 @@ function showFinal() {
     ${[...round.results].sort((a, b) => a.diff - b.diff).map((result, resultIndex, rankedResults) => `<div class="revealed-result ${resultIndex === 0 ? 'round-result-winner' : ''} ${state.format === 'elimination' && resultIndex === rankedResults.length - 1 ? 'disqualified-row' : ''}"><strong>${escapeHtml(result.player)}${resultIndex === 0 ? '<b class="round-winner">melhor da rodada</b>' : ''}${state.format === 'elimination' ? resultIndex === rankedResults.length - 1 ? '<b class="disqualified">desclassificado</b>' : '<b class="classified">classificado</b>' : ''}</strong><span>meta ${formatSeconds(result.target)}s · realizado ${formatSeconds(result.elapsed)}s</span><b class="direction ${result.elapsed < result.target ? 'lower' : result.elapsed > result.target ? 'higher' : 'exact'}">${result.elapsed < result.target ? '↓' : result.elapsed > result.target ? '↑' : '='} ${formatSeconds(result.diff)}s ${result.elapsed < result.target ? 'menor' : result.elapsed > result.target ? 'maior' : 'exato'}</b></div>`).join('')}</article>
   `).join('')}`;
   showScreen('final');
+  launchConfetti();
 }
 
 function resetGame() {
+  stopConfetti();
   state.round = 1;
   state.turn = 0;
   state.results = [];
